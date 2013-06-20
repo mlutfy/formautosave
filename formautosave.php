@@ -68,3 +68,12 @@ function formautosave_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
 function formautosave_civicrm_managed(&$entities) {
   return _formautosave_civix_civicrm_managed($entities);
 }
+
+/**
+ * Implements hook_civicrm_buildForm().
+ */
+function formautosave_civicrm_buildForm($formName, &$form) {
+  CRM_Core_Resources::singleton()
+    ->addScriptFile('ca.bidon.formautosave', 'formautosave.js');
+}
+
