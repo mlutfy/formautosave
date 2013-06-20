@@ -3,15 +3,14 @@
 // auto-saving the field values. We only save fields with data, but that
 // means that if a field has a default value, it will erase the previously
 // saved value. It's not a big deal, but check if wysiwyg fields work?
-
-// TODO: we currently have no way of clearing the saved data.
-// It would be annoying if the user has to think about it.
-// On the other hand, there are not many scenarios where we can assume
-// that it is safe to delete the stored data.
-// For now, leaning towards showing a "saved data" counter in the corner
-// of the screen, and users can clear it becomes too big.
-// Note that we do not indefinitely store info, since we overwrite old
-// data as we enter new data in the same form (ex: Case, CustomData, etc).
+//
+// We have no reliable way of clearing the saved data, and no data
+// separation between form instances of the same type.
+//
+// Data is saved per-form, so if the use has two form#Activity open,
+// they will both save in the same data space. For different activity
+// types, this mostly affects the fields that are common to both.
+// If the activity type is the same, it will give unreliable results.
 
 cj(function($) {
   if (typeof localStorage != 'object') {
@@ -38,7 +37,7 @@ cj(function($) {
     // Save the form values every 5 seconds
     setInterval(function(){
       civicrm_formautosave_save(form_id);
-    }, 15000);
+    }, 10000);
   });
 
   function civicrm_formautosave_save(form_id) {
@@ -50,9 +49,9 @@ cj(function($) {
 
       console.log(form_id + ': Auto-saving form');
 
-      // Avoid saving hidden elements, as well as submit buttons
-      $('.crm-container form input[type!="hidden"]').each(function() {
-        if (! $(this).hasClass('form-submit')) {
+      $('.crm-container form input').each(function() {
+        // Avoid saving submit buttons, and make sure the 'id' is defined
+        if (! $(this).hasClass('form-submit') && $(this).attr('id')) {
           items_saved += civicrm_formautosave_save_element(form_id, $(this));
         }
       });
@@ -73,9 +72,10 @@ cj(function($) {
     var key = form_id + '|' + input_id;
 
     if (e.attr('type') == 'checkbox') {
+/* buggy
       if (e.prop('checked')) {
         console.log(form_id + ' : saving : ' + key + ' = checked');
-        localStorage.setItem(key, 1);
+        localStorage.setItem(key, 'checked');
       }
       else {
         if (localStorage.getItem(key)) {
@@ -83,9 +83,13 @@ cj(function($) {
           localStorage.removeItem(key);
         }
       }
+*/
+    }
+    else if (e.attr('type') == 'radio') {
+      // TODO
     }
     else if (input_value) {
-      console.log(form_id + ' : saving : ' + key + ' = ' + input_value);
+      console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + e.attr('type') + ')');
       localStorage.setItem(key, input_value);
       return 1;
     }
@@ -97,13 +101,17 @@ cj(function($) {
 // FIXME: in the global scope otherwise function won't be found.
 // what's the best way to do this?
 function civicrm_formautosave_restore(form_id) {
-  cj('.crm-container form#' + form_id + ' input[type!="hidden"]').each(function() {
+  cj('.crm-container form#' + form_id + ' input').each(function() {
     var input_id = cj(this).attr('id');
     var input_value = null;
 
     if (input_value = localStorage.getItem(form_id + '|' + input_id)) {
       if (cj(this).attr('type') == 'checkbox') {
-        cj(this).prop('checked', true);
+        // buggy, we sometimes store bogus data
+        // cj(this).prop('checked', true);
+      }
+      else if (cj(this).attr('type') == 'radio') {
+        // todo
       }
       else {
         cj(this).val(input_value);
@@ -133,6 +141,7 @@ function civicrm_formautosave_clear(form_id) {
 
     for(var i in localStorage) {
       if (i.substr(0, len + 1) == key) {
+        localStorage[i] = 'GARBAGE';
         localStorage.removeItem(i);
         items_removed++;
       }
