@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<extension key="ca.bidon.formautosave" type="module">
+  <file>formautosave</file>
+  <name>CiviCRM form auto-save</name>
+  <description>Automatically saves to disk some backend CiviCRM forms to avoid losing data when unexpected errors occur.</description>
+  <license>AGPL3+</license>
+  <maintainer>
+    <author>Mathieu Lutfy</author>
+    <email>mathieu@bidon.ca</email>
+  </maintainer>
+  <releaseDate>2013-06-20</releaseDate>
+  <version>1.0</version>
+  <develStage>alpha</develStage>
+  <compatibility>
+    <ver>4.2</ver>
+    <ver>4.3</ver>
+  </compatibility>
+  <comments>This does not work for all forms, see the README.txt for the list of supported use-cases.</comments>
+  <civix>
+    <namespace>CRM/FormAutoSave</namespace>
+  </civix>
+</extension>
