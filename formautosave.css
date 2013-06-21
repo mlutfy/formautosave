@@ -1,0 +1,13 @@
+
+.crm-formautosave-restore {
+  float: right;
+  border-right: 1px dotted #AAA;
+  margin-right: 1em;
+  padding: 0.25em 1em;
+}
+
+.crm-formautosave-clear {
+  float: right;
+  padding: 0.25em 0;
+}
+

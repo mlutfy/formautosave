@@ -27,12 +27,12 @@ cj(function($) {
     var params = new Array();
     params[1] = ts(form_id);
 
-    $(this).prepend('<div style="float: right; border-right: 1px solid #000; padding-right:1em; margin-right: 1em;"><a href="#" onclick="civicrm_formautosave_restore(\'' + form_id + '\')">' + ts('Restore %1', params) + '</a></div>');
+    $(this).prepend('<div class="crm-formautosave-restore"><a href="#" onclick="civicrm_formautosave_restore(\'' + form_id + '\')">' + ts('Restore %1', params) + '</a></div>');
 
     // Link to clear/delete the saved form data
     var saved_items = civicrm_formautosave_countitems(form_id);
-    var class_name = 'crm-autosave-counter-' + form_id;
-    $(this).prepend('<div style="float: right;"><a href="#" onclick="civicrm_formautosave_clear(\'' + form_id + '\')">' + ts('Clear') + ' (<span class="' + class_name + '">' + saved_items + '</span>)</a></div>');
+    var class_name = 'crm-formautosave-counter-' + form_id;
+    $(this).prepend('<div class="crm-formautosave-clear"><a href="#" onclick="civicrm_formautosave_clear(\'' + form_id + '\')">' + ts('Clear') + ' (<span class="' + class_name + '">' + saved_items + '</span>)</a></div>');
 
     // Save the form values every 5 seconds
     setInterval(function(){
@@ -81,7 +81,7 @@ cj(function($) {
 
       console.log(form_id + ': ' + items_saved + ' items saved.');
       var cpt = civicrm_formautosave_countitems(form_id);
-      cj('.crm-autosave-counter-' + form_id).html(cpt);
+      cj('.crm-formautosave-counter-' + form_id).html(cpt);
     });
   }
 
@@ -189,7 +189,7 @@ function civicrm_formautosave_clear(form_id) {
       }
     }
 
-    cj('.crm-autosave-counter-' + form_id).html('0');
+    cj('.crm-formautosave-counter-' + form_id).html('0');
 
     console.log(form_id + ': ' + items_removed + ' items cleared.');
     // CRM.alert(ts('Storage cleared.'), '', 'success');

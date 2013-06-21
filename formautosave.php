@@ -74,6 +74,7 @@ function formautosave_civicrm_managed(&$entities) {
  */
 function formautosave_civicrm_buildForm($formName, &$form) {
   CRM_Core_Resources::singleton()
-    ->addScriptFile('ca.bidon.formautosave', 'formautosave.js');
+    ->addScriptFile('ca.bidon.formautosave', 'formautosave.js')
+    ->addStyleFile('ca.bidon.formautosave', 'formautosave.css');
 }
 
