@@ -99,6 +99,11 @@ cj(function($) {
       return 0;
     }
 
+    // Never save credit card data on disk
+    if (input_id == 'credit_card_number' || input_id == 'cvv2' || input_id == 'credit_card_exp_date[M]' || input_id == 'credit_card_exp_date[Y]') {
+      return 0;
+    }
+
     if (e.attr('type') == 'checkbox') {
 /* buggy
       if (e.prop('checked')) {

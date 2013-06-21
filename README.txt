@@ -32,6 +32,12 @@ Supported use-cases
 
 - Tested with CKEditor, but not other WYSIWYG editors.
 
+WARNING: the extension checks explicitely to avoid saving credit card information
+on disk, as this would be a security risk and goes against PCI-DSS. However, this
+has not been tested extensively. After enabling this extension, check that it is
+not saving sensitive information by looking at the Javascript console of your
+browser (Ctrl+Shift+K in Firefox, Shift+F12 then click "console" in Chrome).
+
 Support
 =======
 
