@@ -27,7 +27,7 @@ cj(function($) {
     var params = new Array();
     params[1] = ts(form_id);
 
-    $(this).prepend('<div style="float: right; border: 1px solid #000;"><a href="#" onclick="civicrm_formautosave_restore(\'' + form_id + '\')">' + ts('Restore: %1', params) + '</a></div>');
+    $(this).prepend('<div style="float: right; border-right: 1px solid #000; padding-right:1em; margin-right: 1em;"><a href="#" onclick="civicrm_formautosave_restore(\'' + form_id + '\')">' + ts('Restore %1', params) + '</a></div>');
 
     // Link to clear/delete the saved form data
     var saved_items = civicrm_formautosave_countitems(form_id);
@@ -60,6 +60,25 @@ cj(function($) {
         items_saved += civicrm_formautosave_save_element(form_id, $(this));
       });
 
+      $('.crm-container form textarea').each(function() {
+        if ($(this).attr('editor') == 'ckeditor') {
+          console.log(form_id + ': found a ckeditor: ' + $(this).attr('id'));
+          var input_id = cj(this).attr('id');
+
+          var input_value = CKEDITOR.instances[input_id].getData();
+          var key = form_id + '|' + input_id;
+
+          if (input_value && input_value != '&nbsp;') {
+            console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = textarea wysiwyg)');
+            localStorage.setItem(key, input_value);
+            items_saved++;
+          }
+        }
+        else {
+          items_saved += civicrm_formautosave_save_element(form_id, $(this));
+        }
+      });
+
       console.log(form_id + ': ' + items_saved + ' items saved.');
       var cpt = civicrm_formautosave_countitems(form_id);
       cj('.crm-autosave-counter-' + form_id).html(cpt);
@@ -68,8 +87,17 @@ cj(function($) {
 
   function civicrm_formautosave_save_element(form_id, e) {
     var input_id = e.attr('id');
-    var input_value = e.val().trim();
+    var input_value = e.val();
     var key = form_id + '|' + input_id;
+
+    // Has to be done separately, because some special input fields can have a null value
+    if (input_value) {
+      input_value = input_value.trim();
+    }
+
+    if (! input_value) {
+      return 0;
+    }
 
     if (e.attr('type') == 'checkbox') {
 /* buggy
@@ -125,6 +153,20 @@ function civicrm_formautosave_restore(form_id) {
 
     if (input_value = localStorage.getItem(form_id + '|' + input_id)) {
       cj(this).val(input_value);
+    }
+  });
+
+  cj('.crm-container form#' + form_id + ' textarea').each(function() {
+    var input_id = cj(this).attr('id');
+    var input_value = null;
+
+    if (input_value = localStorage.getItem(form_id + '|' + input_id)) {
+      if (cj(this).attr('editor') == 'ckeditor') {
+        CKEDITOR.instances[input_id].setData(input_value);
+      }
+      else {
+        cj(this).val(input_value);
+      }
     }
   });
 }
