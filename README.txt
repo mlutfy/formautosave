@@ -19,7 +19,18 @@ See LICENSE.txt for details.
 Supported use-cases
 ===================
 
+- Tested with Firefox 22 and Chrome 27
 
+- On browsers without "localStorage" support (presumably very old browsers),
+  the extension should simply not enable. You will not see the "restore/clear"
+  links in the upper-right corner of the form.
+
+- Tested on the forms for: "New Contact", "New Case", "Send e-mail to contact".
+  Not very much tested when there are multiple forms in the same screen, but it
+  should work (forms are saved/restored separately, as long as they are forms
+  with a different ID, e.g. form#Contact, form#Activity, form#Case, etc.)
+
+- Tested with CKEditor, but not other WYSIWYG editors.
 
 Support
 =======
