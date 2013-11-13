@@ -47,7 +47,7 @@ cj(function($) {
       var form_id = $(this).attr('id');
       var items_saved = 0;
 
-      console.log(form_id + ': Auto-saving form');
+      // console.log(form_id + ': Auto-saving form');
 
       $('.crm-container form input').each(function() {
         // Avoid saving submit buttons, and make sure the 'id' is defined
