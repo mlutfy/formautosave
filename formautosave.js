@@ -34,17 +34,29 @@ cj(function($) {
     var class_name = 'crm-formautosave-counter-' + form_id;
     $(this).prepend('<div class="crm-formautosave-clear"><a href="#" onclick="civicrm_formautosave_clear(\'' + form_id + '\')">' + ts('Clear') + ' (<span class="' + class_name + '">' + saved_items + '</span>)</a></div>');
 
-    // Save the form values every 5 seconds
+    // Append the keysuffix at this point, now that we have displayed it to the user
+    if (CRM.formautosave.keysuffix) {
+      form_id += ',' + CRM.formautosave.keysuffix;
+    }
+
+    // Save the form values every 10 seconds
     setInterval(function(){
-      civicrm_formautosave_save(form_id);
+      try{
+        civicrm_formautosave_save(form_id);
+      }
+      catch (error) {
+        CRM.alert(ts('Your disk local storage was full. This is used for auto-saving CiviCRM forms. It has been automatically cleared. The exact error was:') + ' ' + error, '', 'ok');
+        civicrm_formautosave_clear('');
+        civicrm_formautosave_save(form_id);
+      }
     }, 10000);
   });
 
   function civicrm_formautosave_save(form_id) {
     // Save each form with a separate key
     // Makes it easier to restore one form but not another.
-    $('.crm-container form#' + form_id).each(function() {
-      var form_id = $(this).attr('id');
+    // $('.crm-container form#' + form_id).each(function() {
+      //  var form_id = $(this).attr('id');
       var items_saved = 0;
 
       // console.log(form_id + ': Auto-saving form');
@@ -82,7 +94,7 @@ cj(function($) {
       console.log(form_id + ': ' + items_saved + ' items saved.');
       var cpt = civicrm_formautosave_countitems(form_id);
       cj('.crm-formautosave-counter-' + form_id).html(cpt);
-    });
+    // });
   }
 
   function civicrm_formautosave_save_element(form_id, e) {
@@ -134,11 +146,17 @@ cj(function($) {
 // FIXME: in the global scope otherwise function won't be found.
 // what's the best way to do this?
 function civicrm_formautosave_restore(form_id) {
+  var keysuffix = '';
+
+  if (CRM.formautosave.keysuffix) {
+    keysuffix = ',' + CRM.formautosave.keysuffix;
+  }
+
   cj('.crm-container form#' + form_id + ' input').each(function() {
     var input_id = cj(this).attr('id');
     var input_value = null;
 
-    if (input_value = localStorage.getItem(form_id + '|' + input_id)) {
+    if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
       if (cj(this).attr('type') == 'checkbox') {
         // buggy, we sometimes store bogus data
         // cj(this).prop('checked', true);
@@ -156,7 +174,7 @@ function civicrm_formautosave_restore(form_id) {
     var input_id = cj(this).attr('id');
     var input_value = null;
 
-    if (input_value = localStorage.getItem(form_id + '|' + input_id)) {
+    if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
       cj(this).val(input_value);
     }
   });
@@ -165,7 +183,7 @@ function civicrm_formautosave_restore(form_id) {
     var input_id = cj(this).attr('id');
     var input_value = null;
 
-    if (input_value = localStorage.getItem(form_id + '|' + input_id)) {
+    if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
       if (cj(this).attr('editor') == 'ckeditor') {
         CKEDITOR.instances[input_id].setData(input_value);
       }
@@ -180,14 +198,17 @@ function civicrm_formautosave_restore(form_id) {
  * Clear data stored for this form.
  */
 function civicrm_formautosave_clear(form_id) {
-  var options = {};
-  options[ts('Yes')] = function() {
+  var clearfunc = function() {
     var items_removed = 0;
-    var len = form_id.length;
-    var key = form_id + '|';
+
+    // In the key comparisons, also include the separator, i.e. '|' or ','
+    var len = form_id.length + 1;
 
     for(var i in localStorage) {
-      if (i.substr(0, len + 1) == key) {
+      // Matches if the form_id is empty (clear all the local storage)
+      // or the key is, for example: 'Activity|'
+      // or the key is, for example: 'Activity,'
+      if (form_id == '' || i.substr(0, len) == form_id + '|' || i.substr(0, len) == form_id + ',') {
         localStorage[i] = 'GARBAGE';
         localStorage.removeItem(i);
         items_removed++;
@@ -199,6 +220,16 @@ function civicrm_formautosave_clear(form_id) {
     console.log(form_id + ': ' + items_removed + ' items cleared.');
     // CRM.alert(ts('Storage cleared.'), '', 'success');
   };
+
+  // We're forcing a full cache flush
+  if (form_id == '') {
+    clearfunc();
+    return;
+  }
+
+  // Otherwise, it was requested by the user, so show a confirmation dialog.
+  var options = {};
+  options[ts('Yes')] = clearfunc;
 
   CRM.confirm(options, {
     message: ts('Are you sure you want to clear the data saved locally for this form? This will delete data saved on disk, not the values in the form displayed on the screen.')

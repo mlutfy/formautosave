@@ -76,5 +76,33 @@ function formautosave_civicrm_buildForm($formName, &$form) {
   CRM_Core_Resources::singleton()
     ->addScriptFile('ca.bidon.formautosave', 'formautosave.js')
     ->addStyleFile('ca.bidon.formautosave', 'formautosave.css');
+
+  // By default the key used is the form name, but this can be very annoying in
+  // some circumstances, such as in Case Activities, where we know that the
+  // contact_id could be used to avoid restoring info from another case.
+  //
+  // The JS will default to the form#ID (Ex: Activity), and will append the
+  // keysuffix to that ID, so that in a Case Activity, it will be, for example,
+  // Activity,12,23, where 12 is the contact_id, and 23 the case_id.
+  //
+  // The .js determine the form#ID, because a page can have multiple forms.
+  //
+  // NB: items are saved in the storage with the key:
+  // form_id|input_id
+
+  $keysuffix = '';
+
+  if ($formName == 'CRM_Case_Form_Activity') {
+    $contact_id = CRM_Utils_Array::value('cid', $_REQUEST);
+    $case_id = CRM_Utils_Array::value('caseid', $_REQUEST);
+
+    $keysuffix = "$contact_id,$case_id";
+  }
+
+  CRM_Core_Resources::singleton()->addSetting(array(
+    'formautosave' => array(
+      'keysuffix' => $keysuffix,
+    ),
+  ));
 }
 
