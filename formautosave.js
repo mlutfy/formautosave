@@ -226,7 +226,6 @@ cj(function($) {
         // or the key is, for example: 'Activity,'
         if (form_id == '' || i.substr(0, len) == form_id + '|' || i.substr(0, len) == form_id + ',') {
           localStorage[i] = 'GARBAGE';
-console.log('REMOVED: ' + i);
           localStorage.removeItem(i);
           items_removed++;
         }
