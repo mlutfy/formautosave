@@ -21,8 +21,6 @@ cj(function($) {
   $('.crm-container form').not('#id_search_block').each(function() {
     var form_id = $(this).attr('id');
 
-    console.log(form_id + ': CiviCRM form auto-save enabled.');
-
     // usually should translate Case, Activity, but will not always work (ex: CustomData) since not in .po files
     var params = new Array();
     params[1] = ts(form_id);
@@ -81,46 +79,41 @@ cj(function($) {
   function civicrm_formautosave_save(form_id) {
     // Save each form with a separate key
     // Makes it easier to restore one form but not another.
-    // $('.crm-container form#' + form_id).each(function() {
-      //  var form_id = $(this).attr('id');
-      var items_saved = 0;
+    var items_saved = 0;
 
-      // console.log(form_id + ': Auto-saving form');
-
-      $('.crm-container form input').each(function() {
-        // Avoid saving submit buttons, and make sure the 'id' is defined
-        if (! $(this).hasClass('form-submit') && $(this).attr('id')) {
-          items_saved += civicrm_formautosave_save_element(form_id, $(this));
-        }
-      });
-
-      $('.crm-container form select').each(function() {
+    $('.crm-container form input').each(function() {
+      // Avoid saving submit buttons, and make sure the 'id' is defined
+      if (! $(this).hasClass('form-submit') && $(this).attr('id')) {
         items_saved += civicrm_formautosave_save_element(form_id, $(this));
-      });
+      }
+    });
 
-      $('.crm-container form textarea').each(function() {
-        if ($(this).attr('editor') == 'ckeditor') {
-          // console.log(form_id + ': found a ckeditor: ' + $(this).attr('id'));
-          var input_id = $(this).attr('id');
+    $('.crm-container form select').each(function() {
+      items_saved += civicrm_formautosave_save_element(form_id, $(this));
+    });
 
-          var input_value = CKEDITOR.instances[input_id].getData();
-          var key = form_id + '|' + input_id;
+    $('.crm-container form textarea').each(function() {
+      if ($(this).attr('editor') == 'ckeditor') {
+        // console.log(form_id + ': found a ckeditor: ' + $(this).attr('id'));
+        var input_id = $(this).attr('id');
 
-          if (input_value && input_value != '&nbsp;') {
-            // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = textarea wysiwyg)');
-            localStorage.setItem(key, input_value);
-            items_saved++;
-          }
+        var input_value = CKEDITOR.instances[input_id].getData();
+        var key = form_id + '|' + input_id;
+
+        if (input_value && input_value != '&nbsp;') {
+          // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = textarea wysiwyg)');
+          localStorage.setItem(key, input_value);
+          items_saved++;
         }
-        else {
-          items_saved += civicrm_formautosave_save_element(form_id, $(this));
-        }
-      });
+      }
+      else {
+        items_saved += civicrm_formautosave_save_element(form_id, $(this));
+      }
+    });
 
-      console.log(form_id + ': ' + items_saved + ' items saved.');
-      var cpt = civicrm_formautosave_countitems(form_id);
-      $('.crm-formautosave-counter-' + form_id).html(cpt);
-    // });
+    console.log(form_id + ': ' + items_saved + ' items saved.');
+    var cpt = civicrm_formautosave_countitems(form_id);
+    $('.crm-formautosave-counter-' + form_id).html(cpt);
   }
 
   function civicrm_formautosave_save_element(form_id, e) {
