@@ -29,9 +29,9 @@ cj(function($) {
     $(this).prepend('<div class="crm-formautosave-restore"><a href="#' + form_id +'">' + ts('Restore %1', params) + '</a></div>');
 
     // Link to clear/delete the saved form data
-    var saved_items = civicrm_formautosave_countitems(form_id);
     var class_name = 'crm-formautosave-counter-' + form_id;
-    $(this).prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + ' (<span class="' + class_name + '">' + saved_items + '</span>)</a></div>');
+    $(this).prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + ' (<span class="' + class_name + '"></span>)</a></div>');
+    civicrm_formautosave_update_count(form_id);
 
     // Save the form values every 10 seconds
     setInterval(function(){
@@ -91,9 +91,8 @@ cj(function($) {
       items_saved += civicrm_formautosave_save_element(form_id, $(this));
     });
 
-    console.log(form_id + ': ' + items_saved + ' items saved.');
-    var cpt = civicrm_formautosave_countitems(form_id);
-    $('.crm-formautosave-counter-' + form_id).html(cpt);
+    // Update the saved items counter
+    civicrm_formautosave_update_count(form_id);
   }
 
   function civicrm_formautosave_save_element(form_id, e) {
@@ -230,10 +229,7 @@ cj(function($) {
         }
       }
 
-      $('.crm-formautosave-counter-' + form_id).html('0');
-
-      console.log(form_id + ': ' + items_removed + ' items cleared.');
-      // CRM.alert(ts('Storage cleared.'), '', 'success');
+      civicrm_formautosave_update_count(form_id);
     };
 
     // We're forcing a full cache flush
@@ -252,17 +248,40 @@ cj(function($) {
   }
 
   /**
+   * Updates the counter of saved elements.
+   * If the form has a 'keysuffix', it will display the total items
+   * specific to that suffix, as well as globally.
+   */
+  function civicrm_formautosave_update_count(form_id) {
+    var cpt_all = civicrm_formautosave_countitems(form_id);
+
+    if (CRM.formautosave.keysuffix) {
+      var cpt_this = civicrm_formautosave_countitems(form_id + ',' + CRM.formautosave.keysuffix);
+      $('.crm-formautosave-counter-' + form_id).html(cpt_this + '/' + cpt_all);
+    }
+    else {
+      $('.crm-formautosave-counter-' + form_id).html(cpt_all);
+    }
+  }
+
+  /**
    * Returns a counter of stored elements for this form.
+   * @see civicrm_formautosave_update_count().
+   *
    * It's a bit lazy, and we should probably do a real count to avoid weird situations.
    * (or provide a real way to nuke all saved data for this site)
+   *
+   * NB: this function can be used in two ways: the form_id can be general, such as 'Activity',
+   * in which case it will match any Activity info (which could be affected by a 'clear').
+   * Otherwise, we can also count, for example, 'Activity,2,3', if we have data saved for a
+   * a specific contact/case record. That's why we match on both '|' and ','.
    */
   function civicrm_formautosave_countitems(form_id) {
     var cpt = 0;
-    var len = form_id.length;
-    var key = form_id + '|';
+    var len = form_id.length + 1;
 
     for(var i in localStorage) {
-      if (i.substr(0, len + 1) == key) {
+      if (i.substr(0, len) == form_id + '|' || i.substr(0, len) == form_id + ',') {
         cpt++;
       }
     }
