@@ -33,14 +33,9 @@ cj(function($) {
     var class_name = 'crm-formautosave-counter-' + form_id;
     $(this).prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + ' (<span class="' + class_name + '">' + saved_items + '</span>)</a></div>');
 
-    // Append the keysuffix at this point, now that we have displayed it to the user
-    if (CRM.formautosave.keysuffix) {
-      form_id += ',' + CRM.formautosave.keysuffix;
-    }
-
     // Save the form values every 10 seconds
     setInterval(function(){
-      try{
+      try {
         civicrm_formautosave_save(form_id);
       }
       catch (error) {
@@ -103,17 +98,15 @@ cj(function($) {
 
   function civicrm_formautosave_save_element(form_id, e) {
     var input_id = e.attr('id');
-    var input_value = e.val();
-    var key = form_id + '|' + input_id;
 
-    // Has to be done separately, because some special input fields can have a null value
-    if (input_value) {
-      input_value = input_value.trim();
+    // Build the localStorage key
+    var key = form_id;
+
+    if (CRM.formautosave.keysuffix) {
+      key += ',' + CRM.formautosave.keysuffix;
     }
 
-    if (! input_value) {
-      return 0;
-    }
+    key += '|' + input_id;
 
     // Never save credit card data on disk
     if (input_id == 'credit_card_number' || input_id == 'cvv2' || input_id == 'credit_card_exp_date[M]' || input_id == 'credit_card_exp_date[Y]') {
@@ -138,7 +131,7 @@ cj(function($) {
       // TODO
     }
     else if (e.attr('editor') == 'ckeditor') {
-      input_value = CKEDITOR.instances[input_id].getData();
+      var input_value = CKEDITOR.instances[input_id].getData();
 
       if (input_value && input_value != '&nbsp;') {
         localStorage.setItem(key, input_value);
@@ -148,6 +141,17 @@ cj(function($) {
       return 0;
     }
     else if (input_value) {
+      var input_value = e.val();
+
+      // Do not trim directly, since the var can be null
+      if (input_value) {
+        input_value = input_value.trim();
+      }
+
+      if (! input_value) {
+        return 0;
+      }
+
       // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + e.attr('type') + ')');
       localStorage.setItem(key, input_value);
       return 1;
