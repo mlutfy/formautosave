@@ -140,7 +140,7 @@ cj(function($) {
 
       return 0;
     }
-    else if (input_value) {
+    else {
       var input_value = e.val();
 
       // Do not trim directly, since the var can be null
