@@ -93,22 +93,7 @@ cj(function($) {
     });
 
     $('.crm-container form textarea').each(function() {
-      if ($(this).attr('editor') == 'ckeditor') {
-        // console.log(form_id + ': found a ckeditor: ' + $(this).attr('id'));
-        var input_id = $(this).attr('id');
-
-        var input_value = CKEDITOR.instances[input_id].getData();
-        var key = form_id + '|' + input_id;
-
-        if (input_value && input_value != '&nbsp;') {
-          // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = textarea wysiwyg)');
-          localStorage.setItem(key, input_value);
-          items_saved++;
-        }
-      }
-      else {
-        items_saved += civicrm_formautosave_save_element(form_id, $(this));
-      }
+      items_saved += civicrm_formautosave_save_element(form_id, $(this));
     });
 
     console.log(form_id + ': ' + items_saved + ' items saved.');
@@ -151,6 +136,16 @@ cj(function($) {
     }
     else if (e.attr('type') == 'radio') {
       // TODO
+    }
+    else if (e.attr('editor') == 'ckeditor') {
+      input_value = CKEDITOR.instances[input_id].getData();
+
+      if (input_value && input_value != '&nbsp;') {
+        localStorage.setItem(key, input_value);
+        return 1;
+      }
+
+      return 0;
     }
     else if (input_value) {
       // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + e.attr('type') + ')');
