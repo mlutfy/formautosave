@@ -2,10 +2,14 @@ CiviCRM Form Auto-Save
 ======================
 
 Automatically saves to disk CiviCRM forms to avoid losing data when unexpected
-errors occur.
+errors occur. To restore the form data, re-open the same form, click on the 'restore'
+link in the upper-right corner of the screen.
+
+It is aimed at CiviCRM installations where staff do a lot of data entry, and
+sooner or later, a large form with lots of data gets lost in an obscur error.
 
 This uses HTML5 DOM storage, so support may vary depending on the browser.
-The extension is developed and tested mainly on the latest version of Firefox.
+The extension is developed and tested mainly on Firefox 22 and later.
 
 Written and maintained by (C) 2013 Mathieu Lutfy
 http://www.nodisys.ca/en
@@ -30,6 +34,16 @@ Supported use-cases
   should work (forms are saved/restored separately, as long as they are forms
   with a different ID, e.g. form#Contact, form#Activity, form#Case, etc.)
 
+- This extension saves fields on a per-form basis, so there is a risk that if
+  a user, for example, created an activity for a first contact, then a second,
+  but the second contact had less information than the first one (not all fields
+  were filled in), then restoring on the second contact activity might restore
+  data from the first activity, since we never implicitely delete stored data.
+  To work around this problem, on a case by case basis, we create a 'keysuffix'
+  key using some IDs from the context, such as the contact_id, case_id, etc.
+  This is mostly done for Case Activities. If you have a use case, please open
+  an issue.
+
 - Tested with CKEditor, but not other WYSIWYG editors.
 
 - Note that currently the extension enables itself for all forms.
@@ -41,6 +55,16 @@ on disk, as this would be a security risk and goes against PCI-DSS. However, thi
 has not been tested extensively. After enabling this extension, check that it is
 not saving sensitive information by looking at the Javascript console of your
 browser (Ctrl+Shift+K in Firefox, Shift+F12 then click "console" in Chrome).
+
+Recommended extensions
+======================
+
+You may also be interested in the 'report error' extension:
+https://github.com/mlutfy/ca.bidon.reporterror
+
+It sends the administrator an e-mail everytime someone encounters a fatal CiviCRM
+error, including information on the page, referer, etc. This way you are informed
+of an error before the user calls you, and it helps to document and discover patterns.
 
 Support
 =======
