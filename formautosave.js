@@ -143,7 +143,7 @@ cj(function($) {
       var input_value = e.val();
 
       // Do not trim directly, since the var can be null
-      if (input_value) {
+      if (typeof input_value === 'string') {
         input_value = input_value.trim();
       }
 
