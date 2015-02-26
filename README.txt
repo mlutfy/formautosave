@@ -11,8 +11,9 @@ sooner or later, a large form with lots of data gets lost in an obscur error.
 This uses HTML5 DOM storage, so support may vary depending on the browser.
 The extension is developed and tested mainly on Firefox 22 and later.
 
-Written and maintained by (C) 2013 Mathieu Lutfy
-http://www.nodisys.ca/en
+Written and maintained by (C) 2013-2015 Mathieu Lutfy
+https://www.symbiotic.coop
+https://www.bidon.ca
 
 To get the latest version of this module:
 https://github.com/mlutfy/ca.bidon.formautosave
@@ -82,5 +83,5 @@ http://civicrm.org/participate/support-civicrm
 While I do my best to provide volunteer support for this extension, please
 consider financially contributing to support or development of this extension
 if you can.
-http://www.nodisys.ca/en
+https://www.symbiotic.coop
 

@@ -12,66 +12,93 @@
 // types, this mostly affects the fields that are common to both.
 // If the activity type is the same, it will give unreliable results.
 
-cj(function($) {
+(function($, _, ts){
   if (typeof localStorage != 'object') {
     console.log('Warning: localStorage not supported by browser. CiviCRM form auto-save will not work. Please upgrade to the latest version of your browser.');
     return;
   }
 
-  $('.crm-container form').not('#id_search_block').each(function() {
-    var form_id = $(this).attr('id');
+  $(function($) {
+    $('.crm-container form').not('#id_search_block').each(function() {
+      var form_id = $(this).attr('id');
+      CRM.formautosaveInit(form_id);
+    });
 
+    // Bind the click event on the 'restore' link.
+    // Done outside the loop in case there are multiple forms in the page.
+    $('.crm-formautosave-restore a').click(function(event) {
+      // Extract the form_id from, for example, '#Activity'
+      // I avoided putting just 'Activity' as the href, since it could be really
+      // confusing if javascript is buggy, or middle-click.
+      var id = cj(this).attr('href').substr(1);
+      CRM.formautosaveRestore(id);
+
+      event.preventDefault();
+      return false;
+    });
+
+    // Bind the click event to the 'clear' link.
+    $('.crm-formautosave-clear a').click(function(event) {
+      // Extract the form_id from, for example, '#Activity'
+      // I avoided putting just 'Activity' as the href, since it could be really
+      // confusing if javascript is buggy, or middle-click.
+      var id = cj(this).attr('href').substr(1);
+      CRM.formautosaveClear(id, false);
+
+      event.preventDefault();
+      return false;
+    });
+
+    // This is a bit silly, but we will wait 5 seconds before enabling.
+    // On some forms, a lot of things happen at load time, so it can cause
+    // false 'on change' events to be captured, and browser overload.
+    setInterval(function(){
+      $('.crm-container form').not('#id_search_block').each(function() {
+        var form_id = $(this).attr('id');
+        CRM.formautosaveEnable(form_id);
+      });
+    }, 5000);
+  });
+
+  CRM.formautosaveInit = function(form_id) {
     // usually should translate Case, Activity, but will not always work (ex: CustomData) since not in .po files
-    var params = new Array();
-    params[1] = ts(form_id);
+    var $this = $('#' + form_id);
 
     // NB: the click event is binded outside the loop, to avoid binding multiple times
-    $(this).prepend('<div class="crm-formautosave-restore"><a href="#' + form_id +'">' + ts('Restore %1', params) + '</a></div>');
+    $this.prepend('<div class="crm-formautosave-restore"><a href="#' + form_id +'">' + ts('Restore %1', { 1: ts(form_id) }) + '</a></div>');
 
     // Link to clear/delete the saved form data
     var class_name = 'crm-formautosave-counter-' + form_id;
-    $(this).prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + ' (<span class="' + class_name + '"></span>)</a></div>');
-    civicrm_formautosave_update_count(form_id);
+    $this.prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + ' (<span class="' + class_name + '"></span>)</a></div>');
+    CRM.formautosaveUpdateCount(form_id);
+  }
 
-    // Save the form values every 10 seconds
-    setInterval(function(){
-      try {
-        civicrm_formautosave_save(form_id);
+  CRM.formautosaveEnable = function(form_id) {
+    // When a first element is changed, start the autosave,
+    // and flush the old form data.
+    cj('#' + form_id + ' input.form-text').one('change', function() {
+      var key = form_id;
+      if (CRM.formautosave.keysuffix) {
+        key += ',' + CRM.formautosave.keysuffix;
       }
-      catch (error) {
-        CRM.alert(ts('Your disk local storage was full. This is used for auto-saving CiviCRM forms. It has been automatically cleared. The exact error was:') + ' ' + error, '', 'ok');
-        civicrm_formautosave_clear('');
-        civicrm_formautosave_save(form_id);
-      }
-    }, 10000);
-  });
+      console.log('FLUSHING ' + key);
+      CRM.formautosaveClear(key, true);
 
-  // Bind the click event on the 'restore' link.
-  // Done outside the loop in case there are multiple forms in the page.
-  $('.crm-formautosave-restore a').click(function(event) {
-    // Extract the form_id from, for example, '#Activity'
-    // I avoided putting just 'Activity' as the href, since it could be really
-    // confusing if javascript is buggy, or middle-click.
-    var id = cj(this).attr('href').substr(1);
-    civicrm_formautosave_restore(id);
+      // Save the form values every 10 seconds
+      setInterval(function(){
+        try {
+          CRM.formautosaveSave(form_id);
+        }
+        catch (error) {
+          CRM.alert(ts('Your disk local storage was full. This is used for auto-saving CiviCRM forms. It has been automatically cleared. The exact error was:') + ' ' + error, '', 'ok');
+          CRM.formautosaveClear('', true);
+          CRM.formautosaveSave(form_id);
+        }
+      }, 10000);
+    });
+  };
 
-    event.preventDefault();
-    return false;
-  });
-
-  // Bind the click event to the 'clear' link.
-  $('.crm-formautosave-clear a').click(function(event) {
-    // Extract the form_id from, for example, '#Activity'
-    // I avoided putting just 'Activity' as the href, since it could be really
-    // confusing if javascript is buggy, or middle-click.
-    var id = cj(this).attr('href').substr(1);
-    civicrm_formautosave_clear(id);
-
-    event.preventDefault();
-    return false;
-  });
-
-  function civicrm_formautosave_save(form_id) {
+  CRM.formautosaveSave = function(form_id) {
     // Save each form with a separate key
     // Makes it easier to restore one form but not another.
     var items_saved = 0;
@@ -79,23 +106,23 @@ cj(function($) {
     $('.crm-container form input').each(function() {
       // Avoid saving submit buttons, and make sure the 'id' is defined
       if (! $(this).hasClass('form-submit') && $(this).attr('id')) {
-        items_saved += civicrm_formautosave_save_element(form_id, $(this));
+        items_saved += CRM.formautosaveSaveElement(form_id, $(this));
       }
     });
 
     $('.crm-container form select').each(function() {
-      items_saved += civicrm_formautosave_save_element(form_id, $(this));
+      items_saved += CRM.formautosaveSaveElement(form_id, $(this));
     });
 
     $('.crm-container form textarea').each(function() {
-      items_saved += civicrm_formautosave_save_element(form_id, $(this));
+      items_saved += CRM.formautosaveSaveElement(form_id, $(this));
     });
 
     // Update the saved items counter
-    civicrm_formautosave_update_count(form_id);
-  }
+    CRM.formautosaveUpdateCount(form_id);
+  };
 
-  function civicrm_formautosave_save_element(form_id, e) {
+  CRM.formautosaveSaveElement = function(form_id, e) {
     var input_id = e.attr('id');
 
     // Build the localStorage key
@@ -113,7 +140,6 @@ cj(function($) {
     }
 
     if (e.attr('type') == 'checkbox') {
-/* buggy
       if (e.prop('checked')) {
         console.log(form_id + ' : saving : ' + key + ' = checked');
         localStorage.setItem(key, 'checked');
@@ -124,7 +150,6 @@ cj(function($) {
           localStorage.removeItem(key);
         }
       }
-*/
     }
     else if (e.attr('type') == 'radio') {
       // TODO
@@ -157,9 +182,9 @@ cj(function($) {
     }
 
     return 0;
-  }
+  };
 
-  function civicrm_formautosave_restore(form_id) {
+  CRM.formautosaveRestore = function(form_id) {
     var keysuffix = '';
 
     if (CRM.formautosave.keysuffix) {
@@ -173,7 +198,7 @@ cj(function($) {
       if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
         if ($(this).attr('type') == 'checkbox') {
           // buggy, we sometimes store bogus data
-          // $(this).prop('checked', true);
+          $(this).prop('checked', true);
         }
         else if ($(this).attr('type') == 'radio') {
           // todo
@@ -206,12 +231,12 @@ cj(function($) {
         }
       }
     });
-  }
+  };
 
   /**
    * Clear data stored for this form.
    */
-  function civicrm_formautosave_clear(form_id) {
+  CRM.formautosaveClear = function(form_id, force) {
     var clearfunc = function() {
       var items_removed = 0;
 
@@ -229,11 +254,11 @@ cj(function($) {
         }
       }
 
-      civicrm_formautosave_update_count(form_id);
+      CRM.formautosaveUpdateCount(form_id);
     };
 
     // We're forcing a full cache flush
-    if (form_id == '') {
+    if (form_id == '' || force) {
       clearfunc();
       return;
     }
@@ -245,28 +270,28 @@ cj(function($) {
     CRM.confirm(options, {
       message: ts('Are you sure you want to clear the data saved locally for this form? This will delete data saved on disk, not the values in the form displayed on the screen.')
     });
-  }
+  };
 
   /**
    * Updates the counter of saved elements.
    * If the form has a 'keysuffix', it will display the total items
    * specific to that suffix, as well as globally.
    */
-  function civicrm_formautosave_update_count(form_id) {
-    var cpt_all = civicrm_formautosave_countitems(form_id);
+  CRM.formautosaveUpdateCount = function(form_id) {
+    var cpt_all = CRM.formautosaveCountItems(form_id);
 
     if (CRM.formautosave.keysuffix) {
-      var cpt_this = civicrm_formautosave_countitems(form_id + ',' + CRM.formautosave.keysuffix);
+      var cpt_this = CRM.formautosaveCountItems(form_id + ',' + CRM.formautosave.keysuffix);
       $('.crm-formautosave-counter-' + form_id).html(cpt_this + '/' + cpt_all);
     }
     else {
       $('.crm-formautosave-counter-' + form_id).html(cpt_all);
     }
-  }
+  };
 
   /**
    * Returns a counter of stored elements for this form.
-   * @see civicrm_formautosave_update_count().
+   * @see CRM.formautosaveUpdateCount().
    *
    * It's a bit lazy, and we should probably do a real count to avoid weird situations.
    * (or provide a real way to nuke all saved data for this site)
@@ -276,7 +301,7 @@ cj(function($) {
    * Otherwise, we can also count, for example, 'Activity,2,3', if we have data saved for a
    * a specific contact/case record. That's why we match on both '|' and ','.
    */
-  function civicrm_formautosave_countitems(form_id) {
+  CRM.formautosaveCountItems = function(form_id) {
     var cpt = 0;
     var len = form_id.length + 1;
 
@@ -287,5 +312,5 @@ cj(function($) {
     }
 
     return cpt;
-  }
-});
+  };
+})(CRM.$, CRM._, CRM.ts('formautosave'));
