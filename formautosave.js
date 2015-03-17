@@ -52,7 +52,7 @@
     // This is a bit silly, but we will wait 5 seconds before enabling.
     // On some forms, a lot of things happen at load time, so it can cause
     // false 'on change' events to be captured, and browser overload.
-    setInterval(function(){
+    setTimeout(function(){
       $('.crm-container form').not('#id_search_block').each(function() {
         var form_id = $(this).attr('id');
         CRM.formautosaveEnable(form_id);
@@ -76,7 +76,15 @@
   CRM.formautosaveEnable = function(form_id) {
     // When a first element is changed, start the autosave,
     // and flush the old form data.
+    //
+    // TODO: would be much better if we only saved each input when it is changed.
     cj('#' + form_id + ' input.form-text').one('change', function() {
+      if (cj('#' + form_id).hasClass('crm-formautosave-enabled')) {
+        return;
+      }
+
+      cj('#' + form_id).addClass('crm-formautosave-enabled');
+
       var key = form_id;
       if (CRM.formautosave.keysuffix) {
         key += ',' + CRM.formautosave.keysuffix;
