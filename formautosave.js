@@ -272,12 +272,10 @@
     }
 
     // Otherwise, it was requested by the user, so show a confirmation dialog.
-    var options = {};
-    options[ts('Yes')] = clearfunc;
-
-    CRM.confirm(options, {
+    CRM.confirm({
       message: ts('Are you sure you want to clear the data saved locally for this form? This will delete data saved on disk, not the values in the form displayed on the screen.')
-    });
+    })
+    .on('crmConfirm:yes', clearfunc);
   };
 
   /**
