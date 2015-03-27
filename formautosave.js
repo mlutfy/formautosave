@@ -47,9 +47,8 @@
       // Extract the form_id from, for example, '#Activity'
       // I avoided putting just 'Activity' as the href, since it could be really
       // confusing if javascript is buggy, or middle-click.
-      var id = cj(this).attr('href').substr(1);
-      CRM.formautosaveRestore(id);
-
+      var form_id = $(this).attr('href').substr(1);
+      CRM.formautosaveRestore(form_id);
       event.preventDefault();
       return false;
     });
@@ -59,7 +58,7 @@
       // Extract the form_id from, for example, '#Activity'
       // I avoided putting just 'Activity' as the href, since it could be really
       // confusing if javascript is buggy, or middle-click.
-      var id = cj(this).attr('href').substr(1);
+      var id = $(this).attr('href').substr(1);
       CRM.formautosaveClear(id, false);
 
       event.preventDefault();
@@ -102,12 +101,12 @@
     // and flush the old form data.
     //
     // TODO: would be much better if we only saved each input when it is changed.
-    cj('#' + form_id + ' input').one('change', function() {
-      if (cj('#' + form_id).hasClass('crm-formautosave-enabled')) {
+    $('#' + form_id + ' input').one('change', function() {
+      if ($('#' + form_id).hasClass('crm-formautosave-enabled')) {
         return;
       }
 
-      cj('#' + form_id).addClass('crm-formautosave-enabled');
+      $('#' + form_id).addClass('crm-formautosave-enabled');
 
       var key = form_id;
       if (CRM.formautosave.keysuffix) {
@@ -165,7 +164,7 @@
 
       if ($this.attr('type') == 'checkbox') {
         if ($this.prop('checked')) {
-          console.log(form_id + ' : saving checkbox : ' + key + ' = checked');
+          // console.log(form_id + ' : saving checkbox : ' + key + ' = checked');
           localStorage.setItem(key, 'checked');
           data[key] = 'checked';
         }
@@ -191,7 +190,7 @@
 
           if ($('input[name=' + name + ']:checked').size() <= 0) {
             if (localStorage.getItem(key) != null) {
-              console.log(form_id + ' : removing radio button ' + key);
+              // console.log(form_id + ' : removing radio button ' + key);
               localStorage.removeItem(key);
             }
           }
@@ -217,7 +216,7 @@
           return;
         }
 
-        console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + $this.attr('type') + ')');
+        // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + $this.attr('type') + ')');
         localStorage.setItem(key, input_value);
         data[key] = input_value;
       }
@@ -278,6 +277,10 @@
         var textFile = event.target;
         var data = JSON.parse(textFile.result);
 
+        // Close the popup
+        $parent.find('div').remove();
+        $parent.toggleClass('crm-formautosave-upload-open');
+
         // Silently clear saved data in localStorage for this form
         // otherwise we would concatenate data.
         CRM.formautosaveClear(form_id, true);
@@ -285,16 +288,18 @@
         $.each(data, function(key, val) {
           var parts = key.split('|');
 
-          // if custom field, we deal with two use-cases:
-          // 1- we are restoring in the same form as originally, so all IDs match
-          // 2- we are restoring in a new instance of the form, so custom field IDs are -1.
-          // we do not handle cases where we are restoring in another edit form.
-          if (parts[1].match(/^custom_\d+_\d+$/) && $(parts[1]).size() == 0) {
-            parts[1] = parts[1].replace(/_(\d+)$/, '_-1');
-          }
-          else if (parts[1].match(/^custom_\d+_\d+_\d+$/) && $(parts[1]).size() == 0) {
-            // ex: checkboxes have the form custom_123_456_78 => custom_123_-1_78
-            parts[1] = parts[1].replace(/_(\d+)_(\d+)$/, '_-1_$2');
+          if ($('#' + parts[1]).size() <= 0 && $('input[type="' + parts[1] + '"]').size() <= 0) {
+            // if custom field, we deal with two use-cases:
+            // 1- we are restoring in the same form as originally, so all IDs match
+            // 2- we are restoring in a new instance of the form, so custom field IDs are -1.
+            // we do not handle cases where we are restoring in another edit form.
+            if (parts[1].match(/^custom_\d+_\d+$/) && $(parts[1]).size() == 0) {
+              parts[1] = parts[1].replace(/_(\d+)$/, '_-1');
+            }
+            else if (parts[1].match(/^custom_\d+_\d+_\d+$/) && $(parts[1]).size() == 0) {
+              // ex: checkboxes have the form custom_123_456_78 => custom_123_-1_78
+              parts[1] = parts[1].replace(/_(\d+)_(\d+)$/, '_-1_$2');
+            }
           }
 
           key = form_id + keysuffix + '|' + parts[1];
@@ -302,10 +307,6 @@
         });
 
         CRM.formautosaveRestore(form_id);
-
-        // Close the popup
-        $parent.find('div').remove();
-        $parent.toggleClass('crm-formautosave-upload-open');
       });
 
       reader.readAsText(file);
@@ -323,6 +324,10 @@
     $('form#' + form_id + ' input[type="text"], form#' + form_id + ' input[type="checkbox"]').each(function() {
       var input_id = $(this).attr('id');
       var input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id);
+
+      if (! input_id) {
+        return;
+      }
 
       // NB: inputs can have a value 0 (which is a valid value to restore)
       if (input_value !== '') {
@@ -348,12 +353,19 @@
     });
 
     // Select
+    // nb: we want to avoid triggering a change, since some fields such as case_type_id
+    // can cause a partial form reload (ex: new case form).
     $('form#' + form_id + ' select').each(function() {
       var input_id = $(this).attr('id');
       var input_value = null;
 
       if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
-        $(this).val(input_value).trigger('change');
+        try {
+          $(this).select2('val', input_value);
+        }
+        catch(err) {
+          $(this).val(input_value);
+        }
       }
     });
 

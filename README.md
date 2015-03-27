@@ -69,6 +69,11 @@ has not been tested extensively. After enabling this extension, check that it is
 not saving sensitive information by looking at the Javascript console of your
 browser (Ctrl+Shift+K in Firefox, Shift+F12 then click "console" in Chrome).
 
+Todo
+====
+
+* Support autocomplete (select2) fields.
+
 Recommended extensions
 ======================
 
