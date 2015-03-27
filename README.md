@@ -72,7 +72,7 @@ browser (Ctrl+Shift+K in Firefox, Shift+F12 then click "console" in Chrome).
 Recommended extensions
 ======================
 
-You may also be interested in the 'report error' extension:
+You may also be interested in the 'report error' extension:  
 https://github.com/mlutfy/ca.bidon.reporterror
 
 It sends the administrator an e-mail everytime someone encounters a fatal CiviCRM
