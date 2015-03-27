@@ -19,17 +19,17 @@ form of another entity (where custom field row IDs will not match).
 This uses HTML5 DOM storage, so support may vary depending on the browser.
 The extension is developed and tested mainly on Firefox and Chrome.
 
-Written and maintained by (C) 2013-2015 Mathieu Lutfy
-https://www.symbiotic.coop
+Written and maintained by (C) 2013-2015 Mathieu Lutfy  
+https://www.symbiotic.coop  
 https://www.bidon.ca
 
-To get the latest version of this module:
+To get the latest version of this module:  
 https://github.com/mlutfy/ca.bidon.formautosave
 
-Distributed under the terms of the GNU Affero General public license (AGPL).
+Distributed under the terms of the GNU Affero General public license (AGPL).  
 See LICENSE.txt for details.
 
-Includes the FileSaver.js library Copyright © 2015 Eli Grey:
+Includes the FileSaver.js library Copyright © 2015 Eli Grey:  
 https://github.com/eligrey/FileSaver.js
 
 
