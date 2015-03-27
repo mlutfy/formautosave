@@ -73,11 +73,8 @@ function formautosave_civicrm_managed(&$entities) {
  * Implements hook_civicrm_buildForm().
  */
 function formautosave_civicrm_buildForm($formName, &$form) {
-  // Do not load if being called from a snippet.
-  // This is either to load custom groups, or to load in a popup.
-  // Popups already have some 'auto save' feature, so better to
-  // keep it simple.
-  if (CRM_Utils_Request::retrieve('snippet', 'String')) {
+  // Do not load if being called from a snippet (assuming custom group).
+  if (CRM_Utils_Request::retrieve('snippet', 'String') == 4) {
     return;
   }
 
