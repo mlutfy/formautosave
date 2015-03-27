@@ -83,7 +83,8 @@ function formautosave_civicrm_buildForm($formName, &$form) {
 
   CRM_Core_Resources::singleton()
     ->addScriptFile('ca.bidon.formautosave', 'formautosave.js')
-    ->addStyleFile('ca.bidon.formautosave', 'formautosave.css');
+    ->addStyleFile('ca.bidon.formautosave', 'formautosave.css')
+    ->addScriptFile('ca.bidon.formautosave', '/dist/filesaver/FileSaver.min.js');
 
   // By default the key used is the form name, but this can be very annoying in
   // some circumstances, such as in Case Activities, where we know that the

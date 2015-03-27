@@ -18,14 +18,31 @@
     return;
   }
 
-  $(function($) {
+  $(function() {
     $('.crm-container form').not('#id_search_block').each(function() {
       var form_id = $(this).attr('id');
       CRM.formautosaveInit(form_id);
     });
 
-    // Bind the click event on the 'restore' link.
+    // Bind the click event on the 'download' link.
     // Done outside the loop in case there are multiple forms in the page.
+    // [ML] FIXME ^^  untrue with proper selectors.
+    $('.crm-formautosave-download a').click(function(event) {
+      var id = $(this).attr('href').substr(1);
+      CRM.formautosaveSave(id, true);
+      event.preventDefault();
+      return false;
+    });
+
+    $('.crm-formautosave-upload a').click(function(event) {
+      var $this = $(this);
+      var id = $this.attr('href').substr(1);
+      CRM.formautosaveUpload(id, $this);
+      event.preventDefault();
+      return false;
+    });
+
+    // Bind the click event on the 'restore' link.
     $('.crm-formautosave-restore a').click(function(event) {
       // Extract the form_id from, for example, '#Activity'
       // I avoided putting just 'Activity' as the href, since it could be really
@@ -61,10 +78,17 @@
   });
 
   CRM.formautosaveInit = function(form_id) {
+    var keysuffix = '';
+    if (CRM.formautosave.keysuffix) {
+      keysuffix = '-' + CRM.formautosave.keysuffix;
+    }
+
     // usually should translate Case, Activity, but will not always work (ex: CustomData) since not in .po files
     var $this = $('#' + form_id);
 
-    // NB: the click event is binded outside the loop, to avoid binding multiple times
+    // NB: the click events are binded outside the loop, to avoid binding multiple times
+    $this.prepend('<div class="crm-formautosave-download"><a href="#' + form_id +'" download="' + form_id + keysuffix + '.json" title="Download">' + '<span class="ui-icon ui-icon-disk"></span>' + '</a></div>');
+    $this.prepend('<div class="crm-formautosave-upload"><a href="#' + form_id +'" title="Upload">' + '<span class="ui-icon ui-icon-folder-open"></span>' + '</a></div>');
     $this.prepend('<div class="crm-formautosave-restore"><a href="#' + form_id +'">' + ts('Restore %1', { 1: ts(form_id) }) + '</a></div>');
 
     // Link to clear/delete the saved form data
@@ -78,7 +102,7 @@
     // and flush the old form data.
     //
     // TODO: would be much better if we only saved each input when it is changed.
-    cj('#' + form_id + ' input.form-text').one('change', function() {
+    cj('#' + form_id + ' input').one('change', function() {
       if (cj('#' + form_id).hasClass('crm-formautosave-enabled')) {
         return;
       }
@@ -95,101 +119,197 @@
       // Save the form values every 10 seconds
       setInterval(function(){
         try {
-          CRM.formautosaveSave(form_id);
+          CRM.formautosaveSave(form_id, false);
         }
         catch (error) {
           CRM.alert(ts('Your disk local storage was full. This is used for auto-saving CiviCRM forms. It has been automatically cleared. The exact error was:') + ' ' + error, '', 'ok');
           CRM.formautosaveClear('', true);
-          CRM.formautosaveSave(form_id);
+          CRM.formautosaveSave(form_id, false);
         }
       }, 10000);
     });
   };
 
-  CRM.formautosaveSave = function(form_id) {
-    // Save each form with a separate key
-    // Makes it easier to restore one form but not another.
-    var items_saved = 0;
+  /**
+   * Save (and optionally download to disk) the form values.
+   *
+   * Save each form with a separate key (Activity, Case, etc) + IDs that
+   * can be set by our buildForm hook. Makes it easier to restore one form
+   * but not another.
+   */
+  CRM.formautosaveSave = function(form_id, download) {
+    var data = {};
+    var sel = '#' + form_id;
+    var keysuffix = form_id + (CRM.formautosave.keysuffix ? ',' + CRM.formautosave.keysuffix : '');
 
-    $('.crm-container form input').each(function() {
-      // Avoid saving submit buttons, and make sure the 'id' is defined
-      if (! $(this).hasClass('form-submit') && $(this).attr('id')) {
-        items_saved += CRM.formautosaveSaveElement(form_id, $(this));
+    $(sel + ' input[type="text"], '
+      + sel + ' input[type="checkbox"], '
+      + sel + ' input[type="radio"], '
+      + sel + ' select, '
+      + sel + ' textarea').each(function() {
+
+      var $this = $(this);
+      var input_id = $this.attr('id');
+
+      if (! input_id) {
+        return;
       }
-    });
 
-    $('.crm-container form select').each(function() {
-      items_saved += CRM.formautosaveSaveElement(form_id, $(this));
-    });
+      // Build the localStorage key
+      var key = keysuffix + '|' + input_id;
 
-    $('.crm-container form textarea').each(function() {
-      items_saved += CRM.formautosaveSaveElement(form_id, $(this));
+      // Never save credit card data on disk
+      if (input_id == 'credit_card_number' || input_id == 'cvv2' || input_id == 'credit_card_exp_date[M]' || input_id == 'credit_card_exp_date[Y]') {
+        return;
+      }
+
+      if ($this.attr('type') == 'checkbox') {
+        if ($this.prop('checked')) {
+          console.log(form_id + ' : saving checkbox : ' + key + ' = checked');
+          localStorage.setItem(key, 'checked');
+          data[key] = 'checked';
+        }
+        else {
+          if (localStorage.getItem(key)) {
+            // console.log(form_id + ' : removing : ' + key + ' (empty checkbox), was: ' + localStorage.getItem(key));
+            localStorage.removeItem(key);
+          }
+        }
+      }
+      else if ($this.attr('type') == 'radio') {
+        // Key needs to be generated using the name, otherwise quickform uses IDs such as QF_FOO
+        key = form_id + (CRM.formautosave.keysuffix ? ',' + CRM.formautosave.keysuffix : '') + '|' + $this.attr('name');
+
+        if ($this.prop('checked')) {
+          localStorage.setItem(key, $this.val());
+          data[key] = $this.val();
+        }
+        else {
+          // Check if this radio button (group) has any value select
+          // and if not, check whether we have to delete from the localStorage.
+          var name = $this.attr('name');
+
+          if ($('input[name=' + name + ']:checked').size() <= 0) {
+            if (localStorage.getItem(key) != null) {
+              console.log(form_id + ' : removing radio button ' + key);
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      }
+      else if ($this.attr('editor') == 'ckeditor') {
+        var input_value = CKEDITOR.instances[input_id].getData();
+
+        if (input_value && input_value != '&nbsp;') {
+          localStorage.setItem(key, input_value);
+          data[key] = input_value;
+        }
+      }
+      else {
+        var input_value = $this.val();
+
+        // Do not trim directly, since the var can be null
+        if (typeof input_value === 'string') {
+          input_value = input_value.trim();
+        }
+
+        if (! input_value) {
+          return;
+        }
+
+        console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + $this.attr('type') + ')');
+        localStorage.setItem(key, input_value);
+        data[key] = input_value;
+      }
     });
 
     // Update the saved items counter
     CRM.formautosaveUpdateCount(form_id);
+
+    if (download) {
+      // c.f. dist/filesaver/FileSaver.min.js
+      var blob = new Blob([JSON.stringify(data)], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "formautosave-" + keysuffix + ".json");
+    }
   };
 
-  CRM.formautosaveSaveElement = function(form_id, e) {
-    var input_id = e.attr('id');
+  /**
+   * Restore a form using a json file uploaded by the user.
+   * This function handles the popup/ui to upload, as well as processing.
+   * It stores the values in the localStorage then calls the Restore function.
+   */
+  CRM.formautosaveUpload = function(form_id, $this) {
+    var $parent = $this.parent();
+    $parent.toggleClass('crm-formautosave-upload-open');
 
-    // Build the localStorage key
-    var key = form_id;
+    if (! $parent.hasClass('crm-formautosave-upload-open')) {
+      $parent.find('div').remove();
+      return;
+    }
 
+    var keysuffix = '';
     if (CRM.formautosave.keysuffix) {
-      key += ',' + CRM.formautosave.keysuffix;
+      keysuffix = ',' + CRM.formautosave.keysuffix;
     }
 
-    key += '|' + input_id;
+    $parent.append(
+      '<div><form id="formautosave-upload-form" action="index.php" method="post" enctype="multipart/form-data">'
+      + '<a class="formautosave-upload-close" title="' + ts('Cancel', {escape:'js'}) + '"><span class="ui-icon ui-icon-close"></span></a>'
+      + '<p>' + ts('Form restoration file upload:') + '</p><input id="formautosave-upload-file" type="file" class="required" name="upload_file" />'
+      + '<input type="button" value="' + ts('Upload', {escape:'js'}) + '" /></form></div>');
 
-    // Never save credit card data on disk
-    if (input_id == 'credit_card_number' || input_id == 'cvv2' || input_id == 'credit_card_exp_date[M]' || input_id == 'credit_card_exp_date[Y]') {
-      return 0;
-    }
+    $('.formautosave-upload-close', $parent).on('click', function(e) {
+      $parent.removeClass('crm-formautosave-upload-open');
+      $parent.find('div').remove();
+    });
 
-    if (e.attr('type') == 'checkbox') {
-      if (e.prop('checked')) {
-        console.log(form_id + ' : saving : ' + key + ' = checked');
-        localStorage.setItem(key, 'checked');
-      }
-      else {
-        if (localStorage.getItem(key)) {
-          console.log(form_id + ' : removing : ' + key + ' (empty checkbox), was: ' + localStorage.getItem(key));
-          localStorage.removeItem(key);
-        }
-      }
-    }
-    else if (e.attr('type') == 'radio') {
-      // TODO
-    }
-    else if (e.attr('editor') == 'ckeditor') {
-      var input_value = CKEDITOR.instances[input_id].getData();
+    $('input[type="button"]', $parent).on('click', function(e) {
+      var file = document.getElementById('formautosave-upload-file').files[0];
 
-      if (input_value && input_value != '&nbsp;') {
-        localStorage.setItem(key, input_value);
-        return 1;
+      // Ignore binary files.
+      if (! file.type.match(/(plain|json)/) || ! file.name.match('json')) {
+        CRM.alert(ts("Unsupported file format: %1 for %2", {1:file.type, 2:file.name}), '', 'error');
+        return;
       }
 
-      return 0;
-    }
-    else {
-      var input_value = e.val();
+      var reader = new FileReader();
+ 
+      reader.addEventListener("load", function(event) {
+        var textFile = event.target;
+        var data = JSON.parse(textFile.result);
 
-      // Do not trim directly, since the var can be null
-      if (typeof input_value === 'string') {
-        input_value = input_value.trim();
-      }
+        // Silently clear saved data in localStorage for this form
+        // otherwise we would concatenate data.
+        CRM.formautosaveClear(form_id, true);
 
-      if (! input_value) {
-        return 0;
-      }
+        $.each(data, function(key, val) {
+          var parts = key.split('|');
 
-      // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + e.attr('type') + ')');
-      localStorage.setItem(key, input_value);
-      return 1;
-    }
+          // if custom field, we deal with two use-cases:
+          // 1- we are restoring in the same form as originally, so all IDs match
+          // 2- we are restoring in a new instance of the form, so custom field IDs are -1.
+          // we do not handle cases where we are restoring in another edit form.
+          if (parts[1].match(/^custom_\d+_\d+$/) && $(parts[1]).size() == 0) {
+            parts[1] = parts[1].replace(/_(\d+)$/, '_-1');
+          }
+          else if (parts[1].match(/^custom_\d+_\d+_\d+$/) && $(parts[1]).size() == 0) {
+            // ex: checkboxes have the form custom_123_456_78 => custom_123_-1_78
+            parts[1] = parts[1].replace(/_(\d+)_(\d+)$/, '_-1_$2');
+          }
 
-    return 0;
+          key = form_id + keysuffix + '|' + parts[1];
+          localStorage.setItem(key, val);
+        });
+
+        CRM.formautosaveRestore(form_id);
+
+        // Close the popup
+        $parent.find('div').remove();
+        $parent.toggleClass('crm-formautosave-upload-open');
+      });
+
+      reader.readAsText(file);
+    });
   };
 
   CRM.formautosaveRestore = function(form_id) {
@@ -199,17 +319,17 @@
       keysuffix = ',' + CRM.formautosave.keysuffix;
     }
 
-    $('.crm-container form#' + form_id + ' input').each(function() {
+    // Text fields and checkboxes
+    $('form#' + form_id + ' input[type="text"], form#' + form_id + ' input[type="checkbox"]').each(function() {
       var input_id = $(this).attr('id');
-      var input_value = null;
+      var input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id);
 
-      if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
+      // NB: inputs can have a value 0 (which is a valid value to restore)
+      if (input_value !== '') {
         if ($(this).attr('type') == 'checkbox') {
-          // buggy, we sometimes store bogus data
-          $(this).prop('checked', true);
-        }
-        else if ($(this).attr('type') == 'radio') {
-          // todo
+          if (input_value == 'checked' || input_value == 1) {
+            $(this).prop('checked', true);
+          }
         }
         else {
           $(this).val(input_value);
@@ -217,15 +337,27 @@
       }
     });
 
-    $('.crm-container form#' + form_id + ' select').each(function() {
+    // Radio buttons (use the 'name' attribute)
+    $('form#' + form_id + ' input[type="radio"]').each(function() {
+      var input_id = $(this).attr('name');
+      var input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id);
+
+      if ($(this).attr('value') === input_value) {
+        $(this).prop('checked', true);
+      }
+    });
+
+    // Select
+    $('form#' + form_id + ' select').each(function() {
       var input_id = $(this).attr('id');
       var input_value = null;
 
       if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
-        $(this).val(input_value);
+        $(this).val(input_value).trigger('change');
       }
     });
 
+    // Textareas
     $('.crm-container form#' + form_id + ' textarea').each(function() {
       var input_id = $(this).attr('id');
       var input_value = null;
@@ -239,6 +371,8 @@
         }
       }
     });
+
+    CRM.alert(ts("Form restoration complete."), '', 'success');
   };
 
   /**

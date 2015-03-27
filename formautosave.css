@@ -1,4 +1,9 @@
+.crm-formautosave-download {
+  float: right;
+  padding: 0.25em 1em;
+}
 
+.crm-formautosave-upload,
 .crm-formautosave-restore {
   float: right;
   border-right: 1px dotted #AAA;
@@ -11,3 +16,32 @@
   padding: 0.25em 0;
 }
 
+.crm-formautosave-upload {
+  position: relative;
+}
+
+.crm-formautosave-upload.crm-formautosave-upload-open {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.crm-formautosave-upload > div {
+  position: absolute;
+  top: 2em;
+  right: 2em;
+  z-index: 99;
+  background: #fff;
+  width: 400px;
+  padding: 2em;
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 5px 5px 5px rgb(204, 204, 204);
+}
+
+a.formautosave-upload-close {
+  float: right;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-top: -2em;
+  margin-right: -1em;
+}
