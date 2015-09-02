@@ -188,6 +188,9 @@
           // and if not, check whether we have to delete from the localStorage.
           var name = $this.attr('name');
 
+          // CiviCRM sometimes has fields with brackets, ex: email[1][is_bulkmail]
+          name = name.replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+
           if ($('input[name=' + name + ']:checked').size() <= 0) {
             if (localStorage.getItem(key) != null) {
               // console.log(form_id + ' : removing radio button ' + key);
