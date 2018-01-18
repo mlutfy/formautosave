@@ -19,7 +19,7 @@
   }
 
   $(function() {
-    $('.crm-container form').not('#id_search_block').each(function() {
+    $('.crm-container form').each(function() {
       var form_id = $(this).attr('id');
       CRM.formautosaveInit(form_id);
     });
@@ -82,12 +82,28 @@
       keysuffix = '-' + CRM.formautosave.keysuffix;
     }
 
-    // usually should translate Case, Activity, but will not always work (ex: CustomData) since not in .po files
     var $this = $('#' + form_id);
 
-    // NB: the click events are binded outside the loop, to avoid binding multiple times
+    // Avoid adding the restore/clear links multiple times when popups open.
+    if ($this.hasClass('crm-formautosave-form-processed')) {
+      return;
+    }
+
+    $this.addClass('crm-formautosave-form-processed');
+
+    // A few forms where autosave makes no sense
+    var avoid_forms = [ 'id_search_block', 'ActivityView', 'CaseView' ];
+
+    if (avoid_forms.includes(form_id)) {
+      return;
+    }
+
+    // NB: the click events on these links are binded outside the loop, to avoid binding multiple times
     $this.prepend('<div class="crm-formautosave-download"><a href="#' + form_id +'" download="' + form_id + keysuffix + '.json" title="Download">' + '<span class="ui-icon ui-icon-disk"></span>' + '</a></div>');
     $this.prepend('<div class="crm-formautosave-upload"><a href="#' + form_id +'" title="Upload">' + '<span class="ui-icon ui-icon-folder-open"></span>' + '</a></div>');
+
+    // usually should translate 'Restore Case', 'Restore Activity', etc,
+    // but will not always work (ex: CustomData) since not in .po files
     $this.prepend('<div class="crm-formautosave-restore"><a href="#' + form_id +'">' + ts('Restore %1', { 1: ts(form_id) }) + '</a></div>');
 
     // Link to clear/delete the saved form data
