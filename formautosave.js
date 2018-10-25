@@ -215,14 +215,6 @@
           }
         }
       }
-      else if ($this.attr('editor') == 'ckeditor') {
-        var input_value = CKEDITOR.instances[input_id].getData();
-
-        if (input_value && input_value != '&nbsp;') {
-          localStorage.setItem(key, input_value);
-          data[key] = input_value;
-        }
-      }
       else {
         var input_value = $this.val();
 
@@ -235,7 +227,14 @@
           return;
         }
 
-        // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + ' (type = ' + $this.attr('type') + ')');
+        // This is only to help with debugging (ex: textarea/ckeditor fields)
+        var input_type = $this.attr('type');
+
+        if (typeof input_type == 'undefined') {
+          input_type = $this.prop('nodeName');
+        }
+
+        // console.log(form_id + ' : saving : ' + key + ' = ' + input_value + '; type = ' + input_type);
         localStorage.setItem(key, input_value);
         data[key] = input_value;
       }
@@ -394,7 +393,7 @@
       var input_value = null;
 
       if (input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id)) {
-        if ($(this).attr('editor') == 'ckeditor') {
+        if ($(this).hasClass('crm-wysiwyg-enabled')) {
           CKEDITOR.instances[input_id].setData(input_value);
         }
         else {
