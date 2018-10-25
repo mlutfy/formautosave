@@ -78,6 +78,12 @@ function formautosave_civicrm_buildForm($formName, &$form) {
     return;
   }
 
+  // Avoid loading the .js twice, which would formautosave init twice
+  // with double-binding of events, etc.
+  if ($formName == 'CRM_Custom_Form_CustomDataByType') {
+    return;
+  }
+
   CRM_Core_Resources::singleton()
     ->addScriptFile('ca.bidon.formautosave', 'formautosave.js')
     ->addStyleFile('ca.bidon.formautosave', 'formautosave.css')
