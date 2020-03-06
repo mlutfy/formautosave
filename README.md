@@ -1,5 +1,4 @@
-CiviCRM Form Auto-Save
-======================
+# CiviCRM Form Auto-Save
 
 Automatically saves to disk (localStorage) CiviCRM forms to avoid losing data
 when unexpected errors occur. To restore the form data, re-open the same form,
@@ -19,12 +18,12 @@ form of another entity (where custom field row IDs will not match).
 This uses HTML5 DOM storage, so support may vary depending on the browser.
 The extension is developed and tested mainly on Firefox and Chrome.
 
-Written and maintained by (C) 2013-2015 Mathieu Lutfy  
+Written and maintained by (C) 2013-2020 Mathieu Lutfy  
 https://www.symbiotic.coop  
 https://www.bidon.ca
 
 To get the latest version of this module:  
-https://github.com/mlutfy/ca.bidon.formautosave
+https://github.com/mlutfy/formautosave
 
 Distributed under the terms of the GNU Affero General public license (AGPL).  
 See LICENSE.txt for details.
@@ -32,9 +31,7 @@ See LICENSE.txt for details.
 Includes the FileSaver.js library Copyright © 2015 Eli Grey:  
 https://github.com/eligrey/FileSaver.js
 
-
-Supported use-cases
-===================
+## Supported use-cases
 
 - Tested with Firefox 22+ and Chrome 27
 
@@ -69,36 +66,24 @@ has not been tested extensively. After enabling this extension, check that it is
 not saving sensitive information by looking at the Javascript console of your
 browser (Ctrl+Shift+K in Firefox, Shift+F12 then click "console" in Chrome).
 
-Todo
-====
+## Todo
 
 * Support autocomplete (select2) fields.
 
-Recommended extensions
-======================
+## Recommended extensions
 
 You may also be interested in the 'report error' extension:  
-https://github.com/mlutfy/ca.bidon.reporterror
+https://lab.civicrm.org/extensions/reporterror
 
 It sends the administrator an e-mail everytime someone encounters a fatal CiviCRM
 error, including information on the page, referer, etc. This way you are informed
 of an error before the user calls you, and it helps to document and discover patterns.
 
-Support
-=======
+## Support
 
 Please post bug reports in the issue tracker of this project on github:  
-https://github.com/mlutfy/ca.bidon.formautosave/issues
+https://github.com/mlutfy/formautosave/issues
 
-This is a community contributed extension written thanks to the financial
-support of organisations using it, as well as the very helpful and collaborative
-CiviCRM community.
-
-If you appreciate this module, please consider donating 10$ to the CiviCRM project:  
-http://civicrm.org/participate/support-civicrm
-
-While I do my best to provide volunteer support for this extension, please
-consider financially contributing to support or development of this extension
-if you can.  
-https://www.symbiotic.coop
+Commercial support provided by Coop Symbiotic:  
+https://www.symbiotic.coop/en
 
