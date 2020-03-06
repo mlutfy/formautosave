@@ -1,6 +1,7 @@
 <?php
 
 require_once 'formautosave.civix.php';
+use CRM_Formautosave_ExtensionUtil as E;
 
 /**
  * Implementation of hook_civicrm_config

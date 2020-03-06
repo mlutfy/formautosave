@@ -22,6 +22,6 @@
     <url desc="Licensing">https://civicrm.org/licensing</url>
   </urls>
   <civix>
-    <namespace>CRM/FormAutoSave</namespace>
+    <namespace>CRM/Formautosave</namespace>
   </civix>
 </extension>
