@@ -105,7 +105,7 @@
 
     // Link to clear/delete the saved form data
     var class_name = 'crm-formautosave-counter-' + form_id;
-    $this.prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + ' (<span class="' + class_name + '"></span>)</a></div>');
+    $this.prepend('<div class="crm-formautosave-clear"><a href="#' + form_id + '">' + ts('Clear') + '<span class="crm-formautosave-counter-wrapper"> (<span class="' + class_name + '"></span>)</span></a></div>');
     CRM.formautosaveUpdateCount(form_id);
   }
 
