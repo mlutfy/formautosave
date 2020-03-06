@@ -12,7 +12,7 @@
 // types, this mostly affects the fields that are common to both.
 // If the activity type is the same, it will give unreliable results.
 
-(function($, _, ts){
+(function($, _, ts) {
   if (typeof localStorage != 'object') {
     console.log('Warning: localStorage not supported by browser. CiviCRM form auto-save will not work. Please upgrade to the latest version of your browser.');
     return;
@@ -109,11 +109,16 @@
     CRM.formautosaveUpdateCount(form_id);
   }
 
+  /**
+   * When a first element is changed, start the autosave (save data every
+   * 10 seconds), and flush the old form data.
+   *
+   * TODO: Would be better to just save when an input is changed.
+   * I guess I wanted to avoid having JS events on all input types,
+   * but if a user leaves their form open for a while, it's a bit of
+   * a waste?
+   */
   CRM.formautosaveEnable = function(form_id) {
-    // When a first element is changed, start the autosave,
-    // and flush the old form data.
-    //
-    // TODO: would be much better if we only saved each input when it is changed.
     $('#' + form_id + ' input').one('change', function() {
       if ($('#' + form_id).hasClass('crm-formautosave-enabled')) {
         return;
@@ -125,7 +130,8 @@
       if (CRM.formautosave.keysuffix) {
         key += ',' + CRM.formautosave.keysuffix;
       }
-      console.log('FLUSHING ' + key);
+
+      console.log('[formautosave] Flushing: ' + key);
       CRM.formautosaveClear(key, true);
 
       // Save the form values every 10 seconds
@@ -329,6 +335,7 @@
   };
 
   CRM.formautosaveRestore = function(form_id) {
+    var delay_change = [];
     var keysuffix = '';
 
     if (CRM.formautosave.keysuffix) {
@@ -340,7 +347,7 @@
       var input_id = $(this).attr('id');
       var input_value = localStorage.getItem(form_id + keysuffix + '|' + input_id);
 
-      if (! input_id) {
+      if (!input_id) {
         return;
       }
 
@@ -353,6 +360,10 @@
         }
         else {
           $(this).val(input_value);
+
+          if ($(this).hasClass('crm-hidden-date')) {
+            delay_change.push(input_id);
+          }
         }
       }
     });
@@ -398,6 +409,14 @@
         }
       }
     });
+
+    // Trigger change events on dates
+    // Wait until the end, otherwise it triggers the flushing of data (c.f. formautosaveEnable)
+    if (delay_change.length > 0) {
+      delay_change.forEach(function(i) {
+        $('#' + i).trigger('change');
+      });
+    }
 
     CRM.alert(ts("Form restoration complete."), '', 'success');
   };
