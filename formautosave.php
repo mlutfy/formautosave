@@ -112,10 +112,9 @@ function formautosave_civicrm_buildForm($formName, &$form) {
     $keysuffix = "$contact_id,$case_id";
   }
 
-  CRM_Core_Resources::singleton()->addSetting(array(
-    'formautosave' => array(
+  CRM_Core_Resources::singleton()->addSetting([
+    'formautosave' => [
       'keysuffix' => $keysuffix,
-    ),
-  ));
+    ],
+  ]);
 }
-
