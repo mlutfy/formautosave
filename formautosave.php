@@ -85,6 +85,25 @@ function formautosave_civicrm_buildForm($formName, &$form) {
     return;
   }
 
+  $allow = Civi::settings()->get('formautosave_enable_forms');
+  $deny = Civi::settings()->get('formautosave_disable_forms');
+
+  if ($allow) {
+    $forms = explode(',', $allow);
+
+    if (!in_array($formName, $forms)) {
+      return;
+    }
+  }
+
+  if ($deny) {
+    $forms = explode(',', $deny);
+
+    if (in_array($formName, $forms)) {
+      return;
+    }
+  }
+
   CRM_Core_Resources::singleton()
     ->addScriptFile('ca.bidon.formautosave', 'formautosave.js')
     ->addStyleFile('ca.bidon.formautosave', 'formautosave.css')
