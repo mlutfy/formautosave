@@ -68,7 +68,7 @@ browser (Ctrl+Shift+K in Firefox, Shift+F12 then click "console" in Chrome).
 
 ## Todo
 
-* Support autocomplete (select2) fields.
+* FIXME: Does remotesave require skipping the IDS? and remove API4 permission override.
 
 ## Recommended extensions
 

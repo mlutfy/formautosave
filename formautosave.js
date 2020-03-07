@@ -243,6 +243,10 @@
       }
     });
 
+    // EXPERIMENTAL: Save the data in CiviCRM, if the feature was enabled.
+    // See the function comments for more info.
+    CRM.formautosaveRemoteSave(form_id, data);
+
     // Update the saved items counter
     CRM.formautosaveUpdateCount(form_id);
 
@@ -251,6 +255,45 @@
       var blob = new Blob([JSON.stringify(data)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, "formautosave-" + keysuffix + ".json");
     }
+  };
+
+  /**
+   * EXPERIMENTAL: Save the data in CiviCRM, if the feature was enabled.
+   * See the formautosave_remotesave_forms setting.
+   */
+  CRM.formautosaveRemoteSave = function(form_id, data) {
+    if (typeof CRM.formautosave.remotesave == 'undefined' || !CRM.formautosave.remotesave) {
+      return;
+    }
+
+    console.log('[formautosave] removesave enabled');
+
+    // FIXME: for now we only support "On Behalf" forms.
+    // FIXME: hardcoded email-3
+    if (CRM.formautosave.remotesave_cid) {
+      // FIXME: For now, we only do a first basic save (create), we do not update.
+      return;
+    }
+
+    // Check if we have organization_name and email
+    if (!(data[form_id + '|onbehalf_organization_name'] && data[form_id + '|onbehalf_email-3'])) {
+      return;
+    }
+
+    CRM.api4('Formautosave', 'create', {
+      values: {
+        "contact_type": "Organization",
+        "organization_name": data[form_id + '|onbehalf_organization_name'],
+        "email": data[form_id + '|onbehalf_email-3']
+      }
+    }).then(function(results) {
+      // do something with results array
+      console.log('[formautosave] saved OK', results);
+      CRM.formautosave.remotesave_cid = 99999; // FIXME
+    }, function(failure) {
+      // handle failure
+      console.log('[formautosave] failed to save', failure);
+    });
   };
 
   /**

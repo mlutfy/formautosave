@@ -37,4 +37,21 @@ return [
     ],
     'quick_form_type' => 'Element',
   ],
+  'formautosave_remotesave_forms' => [
+    'group_name' => E::ts('Formautosave Settings'),
+    'group' => 'formautosave',
+    'name' => 'formautosave_remotesave_forms',
+    'type' => 'String',
+    'add' => '1.0',
+    'default' => '',
+    'title' => E::ts('Remote save the following forms'),
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts('Separate form names by comma. Very experimental feature.'),
+    'html_type' => 'Text',
+    'html_attributes' => [
+      'size' => 120,
+    ],
+    'quick_form_type' => 'Element',
+  ],
 ];

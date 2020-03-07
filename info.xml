@@ -2,7 +2,10 @@
 <extension key="ca.bidon.formautosave" type="module">
   <file>formautosave</file>
   <name>CiviCRM form auto-save</name>
-  <description>Automatically saves to disk (localstorage) some backend CiviCRM forms to avoid losing data when unexpected errors occur.</description>
+  <description>Automatically saves CiviCRM forms to avoid losing data when unexpected errors occur.</description>
+  <classloader>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
   <license>AGPL3+</license>
   <maintainer>
     <author>Mathieu Lutfy</author>
