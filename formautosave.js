@@ -21,7 +21,9 @@
   $(function() {
     $('.crm-container form').each(function() {
       var form_id = $(this).attr('id');
-      CRM.formautosaveInit(form_id);
+      if (form_id) {
+        CRM.formautosaveInit(form_id);
+      }
     });
 
     // Bind the click event on the 'download' link.
@@ -71,7 +73,9 @@
     setTimeout(function(){
       $('.crm-container form').not('#id_search_block').each(function() {
         var form_id = $(this).attr('id');
-        CRM.formautosaveEnable(form_id);
+        if (form_id) {
+          CRM.formautosaveEnable(form_id);
+        }
       });
     }, 5000);
   });
