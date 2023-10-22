@@ -96,7 +96,7 @@
     $this.addClass('crm-formautosave-form-processed');
 
     // A few forms where autosave makes no sense
-    var avoid_forms = [ 'id_search_block', 'ActivityView', 'CaseView' ];
+    var avoid_forms = [ 'id_search_block', 'ActivityView', 'CaseView', 'Search' ];
 
     if (avoid_forms.includes(form_id)) {
       return;
