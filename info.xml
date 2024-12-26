@@ -5,17 +5,18 @@
   <description>Automatically saves CiviCRM forms to avoid losing data when unexpected errors occur.</description>
   <classloader>
     <psr4 prefix="Civi\" path="Civi"/>
+    <psr0 prefix="CRM_" path="."/>
   </classloader>
   <license>AGPL3+</license>
   <maintainer>
     <author>Mathieu Lutfy</author>
     <email>mathieu@symbiotic.coop</email>
   </maintainer>
-  <releaseDate>2018-01-26</releaseDate>
-  <version>1.2</version>
+  <releaseDate>2024-12-26</releaseDate>
+  <version>1.2.1</version>
   <develStage>beta</develStage>
   <compatibility>
-    <ver>5.0</ver>
+    <ver>5.78</ver>
   </compatibility>
   <comments>Support available from https://www.symbiotic.coop/en</comments>
   <urls>
@@ -26,5 +27,10 @@
   </urls>
   <civix>
     <namespace>CRM/Formautosave</namespace>
+    <format>23.02.1</format>
   </civix>
+  <mixins>
+    <mixin>menu-xml@1.0.0</mixin>
+    <mixin>setting-php@1.0.0</mixin>
+  </mixins>
 </extension>
