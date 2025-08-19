@@ -60,7 +60,7 @@ class CRM_Formautosave_BAO_Formautosave {
 
     if (empty($contact_id)) {
       if ($params['contact_type'] == 'Individual') {
-        if (empty($params['first_name']) || empty($params['last_name']) || $empty($params['email'])) {
+        if (empty($params['first_name']) || empty($params['last_name']) || empty($params['email'])) {
           throw new Exception("Missing one of: first_name, last_name, email.");
         }
 
