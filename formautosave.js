@@ -270,7 +270,7 @@
       return;
     }
 
-    console.log('[formautosave] removesave enabled');
+    console.log('[formautosave] autosave enabled');
 
     // FIXME: for now we only support "On Behalf" forms.
     // FIXME: hardcoded email-3
