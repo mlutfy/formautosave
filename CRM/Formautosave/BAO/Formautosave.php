@@ -82,7 +82,7 @@ class CRM_Formautosave_BAO_Formautosave {
 
         $result = \Civi\Api4\Contact::create()
           ->addValue('contact_type', 'Organization')
-          ->addValue('first_name', $params['organization_name'])
+          ->addValue('organization_name', $params['organization_name'])
           ->addValue('email', $params['email'])
           ->setCheckPermissions(false)
           ->execute()
