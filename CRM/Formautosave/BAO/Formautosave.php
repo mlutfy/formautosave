@@ -76,7 +76,7 @@ class CRM_Formautosave_BAO_Formautosave {
         $contact_id = $result['id'];
       }
       elseif ($params['contact_type'] == 'Organization') {
-        if (empty($params['organization_name']) || $empty($params['email'])) {
+        if (empty($params['organization_name']) || empty($params['email'])) {
           throw new Exception("Missing one of: organization_name, email.");
         }
 
